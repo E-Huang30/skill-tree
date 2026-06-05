@@ -5,8 +5,8 @@ import { updateNode } from '../api/nodes'
 const Panel = styled.div`
   width: 256px;
   min-width: 256px;
-  background: #0b0b18;
-  border-left: 1px solid #141424;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   font-family: 'Courier New', Courier, monospace;
@@ -15,9 +15,9 @@ const Panel = styled.div`
 
 const Header = styled.div`
   padding: 13px 16px;
-  border-bottom: 1px solid #141424;
+  border-bottom: 1px solid var(--border);
   font-size: 9px;
-  color: #2a4070;
+  color: var(--muted);
   letter-spacing: 2.5px;
   flex-shrink: 0;
 `

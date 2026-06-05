@@ -7,20 +7,20 @@ const Empty = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #080812;
+  background: var(--bg);
   gap: 10px;
 `
 
 const Msg = styled.div`
   font-size: 11px;
-  color: #1e2a3a;
+  color: var(--muted);
   letter-spacing: 2.5px;
   text-transform: uppercase;
 `
 
 const Sub = styled.div`
   font-size: 9px;
-  color: #141e2e;
+  color: var(--dim);
   letter-spacing: 1px;
 `
 

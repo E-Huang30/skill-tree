@@ -4,8 +4,10 @@ import { ReactFlow, Background, Controls } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import styled from 'styled-components'
 import { getTree, getTreeBudget } from '../api/trees'
+import { useTheme } from '../context/ThemeContext'
 import SkillNode from '../components/SkillNode'
 import NodeDetailDrawer from '../components/NodeDetailDrawer'
+import PivotSimulatorModal from '../components/PivotSimulatorModal'
 
 const nodeTypes = { skillNode: SkillNode }
 
@@ -160,15 +162,15 @@ const Page = styled.div`
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #06060f;
+  background: var(--bg);
   overflow: hidden;
 `
 
 const StatsBar = styled.div`
   height: 46px;
   min-height: 46px;
-  background: #0b0b18;
-  border-bottom: 1px solid #141424;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   padding: 0 16px;
@@ -179,15 +181,15 @@ const StatsBar = styled.div`
 
 const Traj = styled.div`
   font-size: 10px;
-  color: #2a4070;
+  color: var(--muted);
   letter-spacing: 1px;
   white-space: nowrap;
   flex-shrink: 0;
 `
 
-const TrajRole = styled.span`color: #5a90e8; font-weight: 700;`
+const TrajRole = styled.span`color: var(--accent); font-weight: 700;`
 
-const Divider = styled.div`width: 1px; height: 18px; background: #141424; flex-shrink: 0;`
+const Divider = styled.div`width: 1px; height: 18px; background: var(--border); flex-shrink: 0;`
 
 const Stat = styled.div`
   display: flex;
@@ -196,16 +198,16 @@ const Stat = styled.div`
   flex-shrink: 0;
 `
 
-const SVal = styled.div`font-size: 12px; font-weight: 700; color: #5a90e8; line-height: 1;`
-const SLbl = styled.div`font-size: 7px; color: #2a3a55; letter-spacing: 1.5px; margin-top: 2px;`
+const SVal = styled.div`font-size: 12px; font-weight: 700; color: var(--accent); line-height: 1;`
+const SLbl = styled.div`font-size: 7px; color: var(--muted); letter-spacing: 1.5px; margin-top: 2px;`
 
 const Spacer = styled.div`flex: 1;`
 
 const PivotBtn = styled.button`
   background: transparent;
-  border: 1px solid #141e30;
+  border: 1px solid var(--border);
   border-radius: 4px;
-  color: #2a4070;
+  color: var(--muted);
   font-family: inherit;
   font-size: 9px;
   padding: 5px 10px;
@@ -214,7 +216,7 @@ const PivotBtn = styled.button`
   white-space: nowrap;
   flex-shrink: 0;
   transition: all 0.12s;
-  &:hover { background: #0e1628; border-color: #1e3560; color: #5a80c0; }
+  &:hover { background: var(--card); border-color: var(--accent); color: var(--accent); }
 `
 
 const Body = styled.div`flex: 1; display: flex; overflow: hidden;`
@@ -227,21 +229,23 @@ const Loading = styled.div`
   align-items: center;
   justify-content: center;
   font-size: 10px;
-  color: #2a3a55;
+  color: var(--muted);
   letter-spacing: 2px;
-  background: #06060f;
+  background: var(--bg);
 `
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export default function TreeDetail() {
   const { id } = useParams()
-  const [tree, setTree]           = useState(null)
-  const [nodes, setNodes]         = useState([])
-  const [edges, setEdges]         = useState([])
-  const [budget, setBudget]       = useState(null)
+  const { isDark } = useTheme()
+  const [tree, setTree]               = useState(null)
+  const [nodes, setNodes]             = useState([])
+  const [edges, setEdges]             = useState([])
+  const [budget, setBudget]           = useState(null)
   const [selectedNode, setSelectedNode] = useState(null)
-  const [stats, setStats]         = useState({ totalHours: 0, mappedPct: 0 })
+  const [stats, setStats]             = useState({ totalHours: 0, mappedPct: 0 })
+  const [showPivot, setShowPivot]     = useState(false)
 
   const colorMapRef = useRef({})
   const rootSetRef  = useRef(new Set())
@@ -365,7 +369,7 @@ export default function TreeDetail() {
           </>
         )}
         <Spacer />
-        <PivotBtn>PIVOT SIMULATOR</PivotBtn>
+        <PivotBtn onClick={() => setShowPivot(true)}>PIVOT SIMULATOR</PivotBtn>
       </StatsBar>
 
       <Body>
@@ -379,7 +383,7 @@ export default function TreeDetail() {
             fitViewOptions={{ padding: 0.3 }}
             proOptions={{ hideAttribution: true }}
           >
-            <Background variant="dots" color="#1a1a2e" gap={28} size={1} />
+            <Background variant="dots" color={isDark ? '#1a1a2e' : '#c0c8e0'} gap={28} size={1} />
             <Controls
               style={{
                 background: '#0b0b18',
@@ -396,6 +400,10 @@ export default function TreeDetail() {
           onSaved={handleNodeSaved}
         />
       </Body>
+
+      {showPivot && (
+        <PivotSimulatorModal treeId={id} onClose={() => setShowPivot(false)} />
+      )}
     </Page>
   )
 }
