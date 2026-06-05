@@ -137,6 +137,46 @@ const SaveBtn = styled.button`
 
 const STATUSES = ['locked', 'available', 'in_progress', 'complete']
 
+const ResourceList = styled.div`display: flex; flex-direction: column; gap: 6px;`
+
+const ResourceLink = styled.a`
+  display: block;
+  background: #0d0d1c;
+  border: 1px solid #1a2a3a;
+  border-radius: 4px;
+  padding: 8px 10px;
+  text-decoration: none;
+  transition: border-color 0.12s;
+  &:hover { border-color: #2a5090; }
+`
+
+const ResourceNoLink = styled.div`
+  background: #0d0d1c;
+  border: 1px solid #141424;
+  border-radius: 4px;
+  padding: 8px 10px;
+`
+
+const ResourceTitle = styled.div`
+  font-size: 10px;
+  color: ${p => p.$linked ? '#5a80c8' : '#3a5080'};
+  line-height: 1.4;
+`
+
+const ResourceMeta = styled.div`
+  font-size: 8px;
+  color: #2a3a55;
+  letter-spacing: 1px;
+  margin-top: 3px;
+`
+
+const TYPE_ICON = {
+  course:  '◈',
+  video:   '▶',
+  article: '◉',
+  book:    '□',
+}
+
 export default function NodeDetailDrawer({ node, onClose, onSaved }) {
   const [status, setStatus] = useState('locked')
   const [saving, setSaving] = useState(false)
@@ -188,6 +228,30 @@ export default function NodeDetailDrawer({ node, onClose, onSaved }) {
               <Field>
                 <FLabel>BRANCH</FLabel>
                 <FValue>{node.branch_label}</FValue>
+              </Field>
+            )}
+            {node.resources?.length > 0 && (
+              <Field>
+                <FLabel>RESOURCES</FLabel>
+                <ResourceList>
+                  {node.resources.map((r, i) => {
+                    const icon = TYPE_ICON[r.type] || '◆'
+                    const hasUrl = r.url && r.url.trim() !== ''
+                    const inner = (
+                      <>
+                        <ResourceTitle $linked={hasUrl}>{icon} {r.title}</ResourceTitle>
+                        <ResourceMeta>{(r.type || 'resource').toUpperCase()}</ResourceMeta>
+                      </>
+                    )
+                    return hasUrl ? (
+                      <ResourceLink key={i} href={r.url} target="_blank" rel="noopener noreferrer">
+                        {inner}
+                      </ResourceLink>
+                    ) : (
+                      <ResourceNoLink key={i}>{inner}</ResourceNoLink>
+                    )
+                  })}
+                </ResourceList>
               </Field>
             )}
             <Field>

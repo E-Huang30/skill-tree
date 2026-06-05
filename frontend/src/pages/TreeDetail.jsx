@@ -222,7 +222,22 @@ export default function TreeDetail() {
     setSelectedNode(node.data)
   }, [])
 
-  function handleNodeSaved(updatedNode) {
+  async function handleNodeSaved(updatedNode) {
+    if (updatedNode.status === 'complete') {
+      // Backend auto-unlocks children — refetch to get updated statuses
+      try {
+        const freshTree = await getTree(id)
+        const freshMap = {}
+        freshTree.nodes.forEach(n => { freshMap[String(n.id)] = n })
+        // Preserve positions from current layout, update data only
+        setNodes(prev => prev.map(n => ({ ...n, data: freshMap[n.id] ?? n.data })))
+        setSelectedNode(freshMap[String(updatedNode.id)] ?? updatedNode)
+        setStats(computeStats(freshTree.nodes))
+        return
+      } catch {
+        // fall through to local update
+      }
+    }
     setNodes(prev =>
       prev.map(n => n.id === String(updatedNode.id) ? { ...n, data: updatedNode } : n)
     )
