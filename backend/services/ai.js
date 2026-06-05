@@ -1,8 +1,8 @@
 require("dotenv").config();
-const OpenAI = require("openai");
+const Anthropic = require("@anthropic-ai/sdk");
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
 
 async function generateSkillTree(targetRole, context = "") {
   const prompt = `You are a career development expert. Generate a skill tree for someone pursuing the role of "${targetRole}".
@@ -35,13 +35,13 @@ Rules:
 - estimated_hours is a realistic number between 5 and 80
 - resources list should have 1-3 items per node`;
 
-  const res = await client.chat.completions.create({
+  const res = await client.messages.create({
     model: MODEL,
+    max_tokens: 4096,
     messages: [{ role: "user", content: prompt }],
-    response_format: { type: "json_object" },
   });
 
-  return JSON.parse(res.choices[0].message.content);
+  return JSON.parse(res.content[0].text);
 }
 
 async function validateCustomNode(nodeTitle, treeContext) {
@@ -56,13 +56,13 @@ Return ONLY valid JSON:
   "suggested_branch_label": null
 }`;
 
-  const res = await client.chat.completions.create({
+  const res = await client.messages.create({
     model: MODEL,
+    max_tokens: 1024,
     messages: [{ role: "user", content: prompt }],
-    response_format: { type: "json_object" },
   });
 
-  return JSON.parse(res.choices[0].message.content);
+  return JSON.parse(res.content[0].text);
 }
 
 async function runPivotSimulation(currentSkills, targetRole) {
@@ -80,13 +80,13 @@ Analyze the gap and return ONLY valid JSON:
   "summary": "One paragraph summary of the transition"
 }`;
 
-  const res = await client.chat.completions.create({
+  const res = await client.messages.create({
     model: MODEL,
+    max_tokens: 2048,
     messages: [{ role: "user", content: prompt }],
-    response_format: { type: "json_object" },
   });
 
-  return JSON.parse(res.choices[0].message.content);
+  return JSON.parse(res.content[0].text);
 }
 
 async function regenerateWithConstraints(currentNodes, completedNodeIds, targetRole, constraints) {
@@ -105,13 +105,13 @@ Return ONLY valid JSON with the same structure as a new skill tree but:
   "edges": [...]
 }`;
 
-  const res = await client.chat.completions.create({
+  const res = await client.messages.create({
     model: MODEL,
+    max_tokens: 4096,
     messages: [{ role: "user", content: prompt }],
-    response_format: { type: "json_object" },
   });
 
-  return JSON.parse(res.choices[0].message.content);
+  return JSON.parse(res.content[0].text);
 }
 
 async function detectOverlaps(treesWithNodes) {
@@ -138,13 +138,13 @@ Return ONLY valid JSON:
 
 Only include overlaps between nodes from DIFFERENT trees. similarity_score is between 0 and 1.`;
 
-  const res = await client.chat.completions.create({
+  const res = await client.messages.create({
     model: MODEL,
+    max_tokens: 2048,
     messages: [{ role: "user", content: prompt }],
-    response_format: { type: "json_object" },
   });
 
-  return JSON.parse(res.choices[0].message.content);
+  return JSON.parse(res.content[0].text);
 }
 
 module.exports = {
