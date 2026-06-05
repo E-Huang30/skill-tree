@@ -4,6 +4,11 @@ const Anthropic = require("@anthropic-ai/sdk");
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
 
+function parseJSON(text) {
+  const stripped = text.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
+  return JSON.parse(stripped);
+}
+
 async function generateSkillTree(targetRole, context = "") {
   const prompt = `You are a career development expert. Generate a skill tree for someone pursuing the role of "${targetRole}".
 ${context ? `Additional context: ${context}` : ""}
@@ -41,7 +46,7 @@ Rules:
     messages: [{ role: "user", content: prompt }],
   });
 
-  return JSON.parse(res.content[0].text);
+  return parseJSON(res.content[0].text);
 }
 
 async function validateCustomNode(nodeTitle, treeContext) {
@@ -62,7 +67,7 @@ Return ONLY valid JSON:
     messages: [{ role: "user", content: prompt }],
   });
 
-  return JSON.parse(res.content[0].text);
+  return parseJSON(res.content[0].text);
 }
 
 async function runPivotSimulation(currentSkills, targetRole) {
@@ -86,7 +91,7 @@ Analyze the gap and return ONLY valid JSON:
     messages: [{ role: "user", content: prompt }],
   });
 
-  return JSON.parse(res.content[0].text);
+  return parseJSON(res.content[0].text);
 }
 
 async function regenerateWithConstraints(currentNodes, completedNodeIds, targetRole, constraints) {
@@ -111,7 +116,7 @@ Return ONLY valid JSON with the same structure as a new skill tree but:
     messages: [{ role: "user", content: prompt }],
   });
 
-  return JSON.parse(res.content[0].text);
+  return parseJSON(res.content[0].text);
 }
 
 async function detectOverlaps(treesWithNodes) {
@@ -144,7 +149,7 @@ Only include overlaps between nodes from DIFFERENT trees. similarity_score is be
     messages: [{ role: "user", content: prompt }],
   });
 
-  return JSON.parse(res.content[0].text);
+  return parseJSON(res.content[0].text);
 }
 
 module.exports = {
