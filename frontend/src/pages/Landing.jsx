@@ -66,6 +66,23 @@ export default function Landing() {
     })
   }, [])
 
+  // ── Unlock scrolling (GlobalStyle locks html/body/root for AppShell) ───────
+  useEffect(() => {
+    const root = document.getElementById('root')
+    document.documentElement.style.overflow = 'auto'
+    document.documentElement.style.height   = 'auto'
+    document.body.style.overflow             = 'auto'
+    document.body.style.height               = 'auto'
+    if (root) { root.style.overflow = 'auto'; root.style.height = 'auto' }
+    return () => {
+      document.documentElement.style.overflow = ''
+      document.documentElement.style.height   = ''
+      document.body.style.overflow             = ''
+      document.body.style.height               = ''
+      if (root) { root.style.overflow = ''; root.style.height = '' }
+    }
+  }, [])
+
   // ── Idle detection (30s) ────────────────────────────────────────────────────
   useEffect(() => {
     function resetIdle() {
@@ -148,6 +165,7 @@ const Root = styled.div`
   background: #020b14;
   color: #c8eeff;
   min-height: 100vh;
+  height: auto;
   overflow-x: hidden;
 
   /* Hide default cursor while cursor trail is active */
