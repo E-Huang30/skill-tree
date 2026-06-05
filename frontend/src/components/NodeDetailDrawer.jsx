@@ -170,6 +170,49 @@ const ResourceMeta = styled.div`
   margin-top: 3px;
 `
 
+const StartBanner = styled.div`
+  background: #0a1e12;
+  border: 1px solid #1a5030;
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+`
+
+const StartLeft = styled.div`flex: 1; min-width: 0;`
+
+const StartLabel = styled.div`
+  font-size: 8px;
+  color: #40c080;
+  letter-spacing: 2px;
+  font-weight: 700;
+  margin-bottom: 3px;
+`
+
+const StartHint = styled.div`
+  font-size: 9px;
+  color: #3a6050;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+const StartLink = styled.a`
+  flex-shrink: 0;
+  font-size: 8px;
+  color: #40c080;
+  letter-spacing: 1.5px;
+  text-decoration: none;
+  border: 1px solid #1a5030;
+  border-radius: 3px;
+  padding: 5px 9px;
+  font-family: 'Courier New', monospace;
+  transition: background 0.12s;
+  &:hover { background: #0d2a1a; }
+`
+
 const TYPE_ICON = {
   course:  '◈',
   video:   '▶',
@@ -218,6 +261,19 @@ export default function NodeDetailDrawer({ node, onClose, onSaved }) {
           </EmptyWrap>
         ) : (
           <Content>
+            {node.status === 'available' && node.resources?.length > 0 && (
+              <StartBanner>
+                <StartLeft>
+                  <StartLabel>▶ START HERE</StartLabel>
+                  <StartHint>{node.resources[0].title}</StartHint>
+                </StartLeft>
+                {node.resources[0].url && (
+                  <StartLink href={node.resources[0].url} target="_blank" rel="noopener noreferrer">
+                    OPEN →
+                  </StartLink>
+                )}
+              </StartBanner>
+            )}
             <NodeTitle>{node.title}</NodeTitle>
             {node.description && <NodeDesc>{node.description}</NodeDesc>}
             <Field>
