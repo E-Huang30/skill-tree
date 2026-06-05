@@ -1,55 +1,36 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import styled from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 import { generateTree } from '../api/trees'
 
-const Overlay = styled.div`
-  position: fixed; inset: 0; background: rgba(0,0,0,0.75);
-  display: flex; align-items: center; justify-content: center; z-index: 100;
+const fadeIn  = keyframes`from{opacity:0}to{opacity:1}`
+const slideUp = keyframes`
+  from { opacity: 0; transform: translateY(28px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
 `
-const Modal = styled.div`
-  background: #1a1a2e; border-radius: 12px; padding: 32px;
-  width: 480px; display: flex; flex-direction: column; gap: 16px;
-`
-const Title = styled.h2`font-size: 20px; font-weight: 700;`
-const Hint = styled.p`font-size: 14px; color: #888;`
-const Input = styled.input`
-  background: #0f0f23; border: 1px solid #2a2a3e; border-radius: 6px;
-  padding: 10px 14px; color: #f0f0f0; font-size: 14px; width: 100%;
-  &:focus { outline: none; border-color: #4f46e5; }
-`
-const Textarea = styled.textarea`
-  background: #0f0f23; border: 1px solid #2a2a3e; border-radius: 6px;
-  padding: 10px 14px; color: #f0f0f0; font-size: 14px; width: 100%;
-  resize: vertical; min-height: 80px;
-  &:focus { outline: none; border-color: #4f46e5; }
-`
-const Row = styled.div`display: flex; gap: 12px; justify-content: flex-end;`
-const Button = styled.button`
-  background: ${p => p.$secondary ? 'transparent' : '#4f46e5'};
-  color: ${p => p.$secondary ? '#888' : 'white'};
-  border: ${p => p.$secondary ? '1px solid #2a2a3e' : 'none'};
-  border-radius: 6px; padding: 10px 20px; cursor: pointer;
-  font-size: 14px; font-weight: 600;
-  &:hover { background: ${p => p.$secondary ? '#0f0f23' : '#4338ca'}; }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
-`
+const spin = keyframes`from{transform:rotate(0deg)}to{transform:rotate(360deg)}`
+
+const SUGGESTIONS = [
+  'Full Stack Engineer', 'Frontend Developer', 'Backend Developer',
+  'Data Scientist', 'ML Engineer', 'DevOps Engineer',
+  'UI/UX Designer', 'Mobile Developer', 'Security Engineer', 'Product Manager',
+]
 
 export default function CreateTreeModal({ onClose, onCreated }) {
-  const [role, setRole] = useState('')
+  const [role, setRole]       = useState('')
   const [context, setContext] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError]     = useState('')
   const navigate = useNavigate()
 
   async function handleSubmit(e) {
     e.preventDefault()
     const userId = localStorage.getItem('userId')
-    if (!userId) return
+    if (!userId || !role.trim()) return
     setLoading(true)
     setError('')
     try {
-      const tree = await generateTree(userId, role, context)
+      const tree = await generateTree(userId, role.trim(), context)
       onCreated(tree)
       navigate(`/trees/${tree.id}`)
     } catch (err) {
@@ -61,29 +42,302 @@ export default function CreateTreeModal({ onClose, onCreated }) {
   return (
     <Overlay onClick={e => e.target === e.currentTarget && onClose()}>
       <Modal>
-        <Title>Generate Skill Tree</Title>
-        <Hint>AI will build a personalized learning path for your target role.</Hint>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <Input
-            placeholder="Target role (e.g. Frontend Engineer)"
-            value={role}
-            onChange={e => setRole(e.target.value)}
-            required
-          />
-          <Textarea
-            placeholder="Optional context (e.g. I already know React and TypeScript)"
-            value={context}
-            onChange={e => setContext(e.target.value)}
-          />
-          {error && <p style={{ color: '#f87171', fontSize: 13 }}>{error}</p>}
-          <Row>
-            <Button type="button" $secondary onClick={onClose}>Cancel</Button>
-            <Button type="submit" disabled={loading || !role}>
-              {loading ? 'Generating...' : 'Generate'}
-            </Button>
-          </Row>
-        </form>
+        {loading ? (
+          <LoadingBody>
+            <Spinner />
+            <LoadTitle>Building your skill tree…</LoadTitle>
+            <LoadSub>Claude AI is mapping a personalized path to <em>{role}</em></LoadSub>
+            <LoadSteps>
+              <Step>Analyzing role requirements</Step>
+              <Step>Structuring skill dependencies</Step>
+              <Step>Curating learning resources</Step>
+            </LoadSteps>
+          </LoadingBody>
+        ) : (
+          <>
+            <ModalHeader>
+              <HeaderIcon>◈</HeaderIcon>
+              <HeaderText>
+                <ModalTitle>Generate Skill Tree</ModalTitle>
+                <ModalSub>AI maps a personalized path from scratch to your target role</ModalSub>
+              </HeaderText>
+              <CloseBtn onClick={onClose}>✕</CloseBtn>
+            </ModalHeader>
+
+            <ModalBody>
+              <form onSubmit={handleSubmit}>
+                <FieldGroup>
+                  <FieldLabel>TARGET ROLE</FieldLabel>
+                  <RoleInput
+                    placeholder="e.g. Full Stack Engineer"
+                    value={role}
+                    onChange={e => setRole(e.target.value)}
+                    autoFocus
+                    required
+                  />
+                  <SuggestRow>
+                    {SUGGESTIONS.map(s => (
+                      <Suggest key={s} $active={role === s} onClick={() => setRole(s)}>
+                        {s}
+                      </Suggest>
+                    ))}
+                  </SuggestRow>
+                </FieldGroup>
+
+                <FieldGroup>
+                  <FieldLabel>CONTEXT <Optional>(optional)</Optional></FieldLabel>
+                  <ContextArea
+                    placeholder="e.g. I already know React and Python. Focus on cloud and system design."
+                    value={context}
+                    onChange={e => setContext(e.target.value)}
+                    rows={3}
+                  />
+                </FieldGroup>
+
+                {error && <ErrorMsg>{error}</ErrorMsg>}
+
+                <ActionRow>
+                  <CancelBtn type="button" onClick={onClose}>Cancel</CancelBtn>
+                  <GenerateBtn type="submit" disabled={!role.trim()}>
+                    Generate Tree →
+                  </GenerateBtn>
+                </ActionRow>
+              </form>
+            </ModalBody>
+          </>
+        )}
       </Modal>
     </Overlay>
   )
 }
+
+// ── Styles ────────────────────────────────────────────────────────────────────
+
+const Overlay = styled.div`
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+  animation: ${fadeIn} 0.15s ease both;
+`
+
+const Modal = styled.div`
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  width: 540px;
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+  animation: ${slideUp} 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+`
+
+// ── Loading state ──
+const LoadingBody = styled.div`
+  padding: 52px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+`
+
+const Spinner = styled.div`
+  width: 40px; height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: ${spin} 0.8s linear infinite;
+`
+
+const LoadTitle = styled.div`
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+`
+
+const LoadSub = styled.div`
+  font-size: 13px;
+  color: var(--text2);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  em { color: var(--accent); font-style: normal; font-weight: 600; }
+`
+
+const LoadSteps = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  width: 100%;
+  max-width: 280px;
+`
+
+const Step = styled.div`
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  font-family: 'Courier New', monospace;
+  &::before { content: '▸  '; }
+`
+
+// ── Normal state ──
+const ModalHeader = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--border);
+`
+
+const HeaderIcon = styled.div`
+  font-size: 24px;
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 2px;
+`
+
+const HeaderText = styled.div`flex: 1;`
+
+const ModalTitle = styled.h2`
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+`
+
+const ModalSub = styled.p`
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 3px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+`
+
+const CloseBtn = styled.button`
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 28px; height: 28px;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.12s;
+  &:hover { color: var(--text); border-color: var(--border2); }
+`
+
+const ModalBody = styled.div`padding: 22px 24px;`
+
+const FieldGroup = styled.div`margin-bottom: 18px;`
+
+const FieldLabel = styled.div`
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  font-family: 'Courier New', monospace;
+`
+
+const Optional = styled.span`
+  font-weight: 400;
+  color: var(--dim);
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 9px;
+`
+
+const RoleInput = styled.input`
+  width: 100%;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-size: 15px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  outline: none;
+  transition: border-color 0.12s;
+  &:focus { border-color: var(--accent); }
+  &::placeholder { color: var(--dim); }
+`
+
+const SuggestRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+`
+
+const Suggest = styled.button`
+  type: button;
+  background: ${p => p.$active ? 'var(--accent)' : 'var(--card)'};
+  color: ${p => p.$active ? '#000' : 'var(--text2)'};
+  border: 1px solid ${p => p.$active ? 'var(--accent)' : 'var(--border)'};
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  transition: all 0.1s;
+  &:hover { border-color: var(--accent); color: var(--accent); }
+`
+
+const ContextArea = styled.textarea`
+  width: 100%;
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.12s;
+  &:focus { border-color: var(--accent); }
+  &::placeholder { color: var(--dim); }
+`
+
+const ErrorMsg = styled.div`
+  font-size: 12px;
+  color: #f87171;
+  margin-bottom: 14px;
+  font-family: 'Courier New', monospace;
+`
+
+const ActionRow = styled.div`
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+`
+
+const CancelBtn = styled.button`
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 20px;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  transition: all 0.12s;
+  &:hover { border-color: var(--border2); color: var(--text); }
+`
+
+const GenerateBtn = styled.button`
+  background: var(--accent);
+  border: none;
+  border-radius: 10px;
+  padding: 11px 24px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  transition: all 0.15s;
+  &:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+  &:active:not(:disabled) { transform: translateY(0); }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+`

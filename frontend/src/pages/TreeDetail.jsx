@@ -386,20 +386,21 @@ export default function TreeDetail() {
             <Background variant="dots" color={isDark ? '#1a1a2e' : '#c0c8e0'} gap={28} size={1} />
             <Controls
               style={{
-                background: '#0b0b18',
-                border: '1px solid #141424',
+                background: 'var(--panel)',
+                border: '1px solid var(--border)',
                 borderRadius: 5,
               }}
             />
           </ReactFlow>
         </FlowArea>
-
-        <NodeDetailDrawer
-          node={selectedNode}
-          onClose={() => setSelectedNode(null)}
-          onSaved={handleNodeSaved}
-        />
       </Body>
+
+      {/* Floating modals — rendered outside Body so FlowArea fills full width */}
+      <NodeDetailDrawer
+        node={selectedNode}
+        onClose={() => setSelectedNode(null)}
+        onSaved={handleNodeSaved}
+      />
 
       {showPivot && (
         <PivotSimulatorModal treeId={id} onClose={() => setShowPivot(false)} />

@@ -1,5 +1,6 @@
 import { Handle, Position } from '@xyflow/react'
 import styled from 'styled-components'
+import { useTheme } from '../context/ThemeContext'
 
 const ICONS = [
   // 0: code brackets
@@ -44,11 +45,19 @@ function pickIcon(title) {
 const HS = { background: 'transparent', border: 'none', width: 6, height: 6 }
 
 export default function SkillNode({ data }) {
+  const { isDark } = useTheme()
   const { status = 'locked', branchColor = '#5a90e8', isRoot = false, title = '' } = data
   const locked   = status === 'locked'
   const complete = status === 'complete'
   const active   = status === 'in_progress'
-  const color    = locked ? '#1e2a3a' : branchColor
+
+  // In light mode: green = done, red = not done, muted = locked
+  // In dark mode: branch color per path, dim for locked
+  const color = isDark
+    ? (locked ? '#1e2a3a' : branchColor)
+    : complete ? '#4ade80'
+    : locked   ? '#c8b8b8'
+    : '#ef4444'
   const SIZE     = isRoot ? 68 : 50
   // approx height of labels below the circle (gap + label + optional branch tag)
   const LABEL_H  = isRoot ? 44 : 25
