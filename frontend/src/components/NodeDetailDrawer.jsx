@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { updateNode } from '../api/nodes'
 
+// ── Styled components ──────────────────────────────────────────────────────────
+
 const Panel = styled.div`
-  width: 256px;
-  min-width: 256px;
-  background: #0b0b18;
-  border-left: 1px solid #141424;
+  width: 272px;
+  min-width: 272px;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   font-family: 'Courier New', Courier, monospace;
@@ -15,9 +17,9 @@ const Panel = styled.div`
 
 const Header = styled.div`
   padding: 13px 16px;
-  border-bottom: 1px solid #141424;
+  border-bottom: 1px solid var(--border);
   font-size: 9px;
-  color: #2a4070;
+  color: var(--muted);
   letter-spacing: 2.5px;
   flex-shrink: 0;
 `
@@ -28,10 +30,11 @@ const Scroll = styled.div`
   display: flex;
   flex-direction: column;
   &::-webkit-scrollbar { width: 3px; }
-  &::-webkit-scrollbar-thumb { background: #141424; }
+  &::-webkit-scrollbar-thumb { background: var(--border); }
 `
 
-// Empty state
+// ── Empty state ───────────────────────────────────────────────────────────────
+
 const EmptyWrap = styled.div`
   flex: 1;
   display: flex;
@@ -44,98 +47,197 @@ const EmptyWrap = styled.div`
 
 const EmptyMsg = styled.div`
   font-size: 9px;
-  color: #1e2a3a;
+  color: var(--dim);
   letter-spacing: 1.5px;
   line-height: 2;
   text-align: center;
 `
 
 const TipBox = styled.div`
-  background: #0d0d1c;
-  border: 1px solid #141424;
-  border-radius: 4px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
   padding: 12px 14px;
   width: 100%;
 `
 
 const TipLabel = styled.div`
   font-size: 7px;
-  color: #1e2a3a;
+  color: var(--dim);
   letter-spacing: 2.5px;
   margin-bottom: 8px;
 `
 
 const TipText = styled.div`
   font-size: 9px;
-  color: #1e2a3a;
+  color: var(--muted);
   line-height: 2;
-  letter-spacing: 0.3px;
 `
 
-// Node detail state
+// ── Node detail ───────────────────────────────────────────────────────────────
+
 const Content = styled.div`
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 `
 
 const NodeTitle = styled.div`
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  color: #6a9fd8;
+  color: var(--accent);
   line-height: 1.35;
 `
 
 const NodeDesc = styled.div`
-  font-size: 9px;
-  color: #3a5080;
-  line-height: 1.9;
+  font-size: 10px;
+  color: var(--text2);
+  line-height: 1.8;
 `
 
-const Field = styled.div``
+const Section = styled.div``
 
-const FLabel = styled.div`
+const SLabel = styled.div`
   font-size: 7px;
-  color: #1e2a3a;
+  color: var(--muted);
   letter-spacing: 2.5px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 `
 
-const FValue = styled.div`
+const SValue = styled.div`
   font-size: 11px;
-  color: #4a6a9a;
+  color: var(--text2);
 `
+
+// ── Resources ─────────────────────────────────────────────────────────────────
+
+const ResourceList = styled.div`display: flex; flex-direction: column; gap: 8px;`
+
+const ResourceCard = styled.a`
+  display: block;
+  background: var(--card);
+  border: 1px solid ${p => p.$hasUrl ? 'var(--border2)' : 'var(--border)'};
+  border-radius: 6px;
+  padding: 10px 12px;
+  text-decoration: none;
+  cursor: ${p => p.$hasUrl ? 'pointer' : 'default'};
+  transition: border-color 0.12s, background 0.12s;
+  ${p => p.$hasUrl && `&:hover { border-color: var(--accent); background: var(--border); }`}
+`
+
+const ResourceTop = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 4px;
+`
+
+const ResourceIcon = styled.span`
+  font-size: 12px;
+  flex-shrink: 0;
+  color: ${p => p.$hasUrl ? 'var(--accent)' : 'var(--muted)'};
+`
+
+const ResourceTitle = styled.div`
+  font-size: 10px;
+  font-weight: 600;
+  color: ${p => p.$hasUrl ? 'var(--accent)' : 'var(--text2)'};
+  line-height: 1.3;
+`
+
+const ResourceMeta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`
+
+const ResourcePlatform = styled.span`
+  font-size: 8px;
+  color: var(--muted);
+  letter-spacing: 0.8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+`
+
+const ResourceType = styled.span`
+  font-size: 8px;
+  color: var(--dim);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+`
+
+const ResourceNote = styled.div`
+  margin-top: 5px;
+  font-size: 9px;
+  color: var(--muted);
+  line-height: 1.6;
+  border-left: 2px solid var(--border2);
+  padding-left: 8px;
+`
+
+const ExternalArrow = styled.span`
+  font-size: 9px;
+  color: var(--muted);
+  margin-left: auto;
+  flex-shrink: 0;
+`
+
+// ── Status editor ─────────────────────────────────────────────────────────────
 
 const Select = styled.select`
-  background: #0d0d1c;
-  border: 1px solid #1a2a3a;
-  border-radius: 4px;
-  padding: 7px 10px;
-  color: #6a9fd8;
-  font-size: 9px;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  padding: 8px 10px;
+  color: var(--text);
+  font-size: 10px;
   font-family: inherit;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   width: 100%;
   cursor: pointer;
-  &:focus { outline: none; border-color: #2a5090; }
+  &:focus { outline: none; border-color: var(--accent); }
 `
 
 const SaveBtn = styled.button`
-  background: ${p => p.disabled ? 'transparent' : '#0d1828'};
-  border: 1px solid ${p => p.disabled ? '#141424' : '#1e3a70'};
-  border-radius: 4px;
-  color: ${p => p.disabled ? '#1e2a3a' : '#4a80d8'};
+  background: ${p => p.disabled ? 'transparent' : 'var(--card)'};
+  border: 1px solid ${p => p.disabled ? 'var(--border)' : 'var(--accent)'};
+  border-radius: 5px;
+  color: ${p => p.disabled ? 'var(--dim)' : 'var(--accent)'};
   font-family: inherit;
-  font-size: 8px;
+  font-size: 9px;
   padding: 9px;
   cursor: ${p => p.disabled ? 'not-allowed' : 'pointer'};
   letter-spacing: 2px;
+  width: 100%;
   transition: all 0.12s;
-  &:hover:not(:disabled) { background: #101e38; }
+  &:hover:not(:disabled) { background: var(--border); }
 `
 
+const UnlockNote = styled.div`
+  font-size: 8px;
+  color: #40c080;
+  letter-spacing: 0.5px;
+  text-align: center;
+  padding: 4px 0 0;
+  opacity: 0.8;
+`
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+const TYPE_ICON = { course: '◈', video: '▶', article: '◉', book: '□', tutorial: '◆' }
+
 const STATUSES = ['locked', 'available', 'in_progress', 'complete']
+const STATUS_LABELS = {
+  locked: 'Locked',
+  available: 'Available — ready to start',
+  in_progress: 'In Progress',
+  complete: 'Complete ✓',
+}
+
+// ── Component ──────────────────────────────────────────────────────────────────
 
 export default function NodeDetailDrawer({ node, onClose, onSaved }) {
   const [status, setStatus] = useState('locked')
@@ -163,46 +265,86 @@ export default function NodeDetailDrawer({ node, onClose, onSaved }) {
         {!node ? (
           <EmptyWrap>
             <EmptyMsg>
-              SELECT ANY NODE<br />
-              ON THE MAP<br />
-              TO INSPECT
+              SELECT ANY NODE<br />ON THE MAP<br />TO INSPECT
             </EmptyMsg>
             <TipBox>
-              <TipLabel>// TIP</TipLabel>
+              <TipLabel>// HOW IT WORKS</TipLabel>
               <TipText>
-                Lit nodes are unlockable.<br />
-                Dashed edges = optional path.<br />
-                ◇ = costs SP · ⚡ = free
+                Click any glowing node to open it.<br />
+                Work through its resources, then<br />
+                mark it <strong>Complete</strong> to unlock<br />
+                the next skills in your path.
               </TipText>
             </TipBox>
           </EmptyWrap>
         ) : (
           <Content>
             <NodeTitle>{node.title}</NodeTitle>
+
             {node.description && <NodeDesc>{node.description}</NodeDesc>}
-            <Field>
-              <FLabel>HOURS</FLabel>
-              <FValue>{node.estimated_hours || 0}h estimated</FValue>
-            </Field>
-            {node.branch_label && (
-              <Field>
-                <FLabel>BRANCH</FLabel>
-                <FValue>{node.branch_label}</FValue>
-              </Field>
+
+            <Section>
+              <SLabel>ESTIMATED TIME</SLabel>
+              <SValue>{node.estimated_hours || 0}h</SValue>
+            </Section>
+
+            {node.resources?.length > 0 && (
+              <Section>
+                <SLabel>START HERE — RESOURCES</SLabel>
+                <ResourceList>
+                  {node.resources.map((r, i) => {
+                    const hasUrl = !!(r.url?.trim())
+                    const icon = TYPE_ICON[r.type] || '◆'
+                    return (
+                      <ResourceCard
+                        key={i}
+                        as={hasUrl ? 'a' : 'div'}
+                        href={hasUrl ? r.url : undefined}
+                        target={hasUrl ? '_blank' : undefined}
+                        rel={hasUrl ? 'noopener noreferrer' : undefined}
+                        $hasUrl={hasUrl}
+                      >
+                        <ResourceTop>
+                          <ResourceIcon $hasUrl={hasUrl}>{icon}</ResourceIcon>
+                          <ResourceTitle $hasUrl={hasUrl}>{r.title}</ResourceTitle>
+                          {hasUrl && <ExternalArrow>↗</ExternalArrow>}
+                        </ResourceTop>
+                        <ResourceMeta>
+                          {r.platform && <ResourcePlatform>{r.platform}</ResourcePlatform>}
+                          <ResourceType>{r.type || 'resource'}</ResourceType>
+                        </ResourceMeta>
+                        {r.note && <ResourceNote>{r.note}</ResourceNote>}
+                      </ResourceCard>
+                    )
+                  })}
+                </ResourceList>
+              </Section>
             )}
-            <Field>
-              <FLabel>STATUS</FLabel>
+
+            {node.branch_label && (
+              <Section>
+                <SLabel>BRANCH / SPECIALIZATION</SLabel>
+                <SValue>{node.branch_label}</SValue>
+              </Section>
+            )}
+
+            <Section>
+              <SLabel>MARK PROGRESS</SLabel>
               <Select value={status} onChange={e => setStatus(e.target.value)}>
                 {STATUSES.map(s => (
-                  <option key={s} value={s}>
-                    {s.replace('_', ' ').toUpperCase()}
-                  </option>
+                  <option key={s} value={s}>{STATUS_LABELS[s]}</option>
                 ))}
               </Select>
-            </Field>
-            <SaveBtn onClick={handleSave} disabled={saving || status === node.status}>
-              {saving ? 'SAVING...' : 'SAVE CHANGES'}
-            </SaveBtn>
+            </Section>
+
+            <div>
+              <SaveBtn onClick={handleSave} disabled={saving || status === node.status}>
+                {saving ? 'SAVING...' : 'SAVE PROGRESS'}
+              </SaveBtn>
+              {status === 'complete' && status !== node.status && (
+                <UnlockNote>↓ will unlock next skills in your path</UnlockNote>
+              )}
+            </div>
           </Content>
         )}
       </Scroll>

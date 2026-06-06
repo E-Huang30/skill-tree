@@ -19,11 +19,17 @@ Return ONLY valid JSON with this exact structure:
     {
       "id": "n1",
       "title": "Skill Name",
-      "description": "What this skill covers",
+      "description": "What this skill covers and why it matters for the role",
       "estimated_hours": 20,
       "branch_label": null,
       "resources": [
-        { "type": "course", "title": "Resource Name", "url": "" }
+        {
+          "type": "course",
+          "title": "Specific lesson or course title",
+          "url": "https://www.khanacademy.org/specific/path",
+          "platform": "Khan Academy",
+          "note": "Start with Unit 1: Intro — complete the first 3 exercises to build the foundation"
+        }
       ]
     }
   ],
@@ -35,10 +41,21 @@ Return ONLY valid JSON with this exact structure:
 Rules:
 - 8 to 15 nodes total
 - First node status should be "available", all others "locked"
-- Include at least one fork (branch_label should be set on sibling nodes with the same parent to indicate a specialization choice)
+- Include at least one fork (branch_label set on sibling nodes with same parent to show a specialization choice)
 - edge_type is one of: required, optional, fork
 - estimated_hours is a realistic number between 5 and 80
-- resources list should have 1-3 items per node`;
+- resources: 1-3 items per node with REAL URLs from free platforms only:
+  * Khan Academy: https://www.khanacademy.org/[subject]/[unit]
+  * freeCodeCamp: https://www.freecodecamp.org/learn/[certification]
+  * The Odin Project: https://www.theodinproject.com/paths/[path-name]
+  * MDN Web Docs: https://developer.mozilla.org/en-US/docs/[topic]
+  * W3Schools: https://www.w3schools.com/[topic]/
+  * Coursera (free audit): https://www.coursera.org/learn/[course-slug]
+  * YouTube (specific channel/playlist): e.g. CS50, Traversy Media, Fireship, 3Blue1Brown
+  * Google Digital Garage: https://learndigital.withgoogle.com/digitalgarage/course/[course]
+- The "note" field MUST give exact next-action instructions (e.g. "Watch the first 4 videos then take the quiz", "Complete Module 1: Variables", "Read the Intro and do Exercises 1-5")
+- NEVER leave url as empty string — always use a real URL
+- Use beginner-friendly resources for early nodes, advanced ones for later nodes`;
 
   const res = await client.messages.create({
     model: MODEL,
