@@ -9,6 +9,7 @@ const nodesRouter     = require("./routes/nodes");
 const overlapsRouter  = require("./routes/overlaps");
 const simulateRouter  = require("./routes/simulate");
 const communityRouter = require("./routes/community");
+const reviewsRouter   = require("./routes/reviews");
 
 const app = express();
 app.use(cors());
@@ -22,6 +23,7 @@ app.use("/nodes",     nodesRouter);
 app.use("/overlaps",  overlapsRouter);
 app.use("/simulate",  simulateRouter);
 app.use("/community", communityRouter);
+app.use("/reviews",   reviewsRouter);
 
 // Serve React frontend
 app.use(express.static(path.join(__dirname, "public")));

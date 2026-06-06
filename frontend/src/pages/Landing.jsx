@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import styled, { keyframes } from 'styled-components'
+import { getReviews, submitReview } from '../api/reviews'
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const BLUE       = '#2563eb'
@@ -44,6 +45,356 @@ const HOW_DETAILS = [
 ]
 
 // ── Micro-components ──────────────────────────────────────────────────────────
+
+// ── Reviews component ─────────────────────────────────────────────────────────
+
+function StarRow({ value, onChange, readOnly }) {
+  return (
+    <Stars>
+      {[1,2,3,4,5].map(n => (
+        <Star
+          key={n}
+          $filled={n <= value}
+          $clickable={!readOnly}
+          onClick={() => !readOnly && onChange && onChange(n)}
+        >★</Star>
+      ))}
+    </Stars>
+  )
+}
+
+function ReviewCard({ review }) {
+  const initial = (review.name || '?')[0].toUpperCase()
+  const date = new Date(review.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+  return (
+    <RCard
+      as={motion.div}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+    >
+      <RTop>
+        <RAvatar>{initial}</RAvatar>
+        <RMeta>
+          <RName>{review.name}</RName>
+          <RDate>{date}</RDate>
+        </RMeta>
+        <StarRow value={review.rating} readOnly />
+      </RTop>
+      <RText>"{review.text}"</RText>
+    </RCard>
+  )
+}
+
+function ReviewsBody() {
+  const [reviews, setReviews] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({ name: '', rating: 5, text: '' })
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
+
+  useEffect(() => {
+    getReviews()
+      .then(setReviews)
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!form.name.trim() || !form.text.trim()) {
+      setError('Please fill in your name and review.')
+      return
+    }
+    setSubmitting(true)
+    setError('')
+    try {
+      const created = await submitReview(form)
+      setReviews(prev => [created, ...prev])
+      setForm({ name: '', rating: 5, text: '' })
+      setShowForm(false)
+      setSuccess(true)
+      setTimeout(() => setSuccess(false), 3000)
+    } catch {
+      setError('Could not submit review. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <ReviewsInner>
+      <ReviewsTop>
+        <ReviewCount>{reviews.length} review{reviews.length !== 1 ? 's' : ''}</ReviewCount>
+        <WriteBtn onClick={() => setShowForm(v => !v)}>
+          {showForm ? '✕ Cancel' : '✍ Write a Review'}
+        </WriteBtn>
+      </ReviewsTop>
+
+      <AnimatePresence>
+        {showForm && (
+          <ReviewForm
+            as={motion.form}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            onSubmit={handleSubmit}
+          >
+            <FormRow>
+              <FormLabel>Your name</FormLabel>
+              <FormInput
+                placeholder="e.g. Alex Johnson"
+                value={form.name}
+                onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+                maxLength={80}
+              />
+            </FormRow>
+            <FormRow>
+              <FormLabel>Rating</FormLabel>
+              <StarRow value={form.rating} onChange={r => setForm(p => ({ ...p, rating: r }))} />
+            </FormRow>
+            <FormRow>
+              <FormLabel>Your review</FormLabel>
+              <FormTextarea
+                placeholder="Tell others what you thought about SkillOS…"
+                value={form.text}
+                onChange={e => setForm(p => ({ ...p, text: e.target.value }))}
+                rows={4}
+                maxLength={500}
+              />
+              <CharCount>{form.text.length}/500</CharCount>
+            </FormRow>
+            {error && <FormError>{error}</FormError>}
+            <SubmitBtn type="submit" disabled={submitting}>
+              {submitting ? 'Submitting…' : 'Submit Review →'}
+            </SubmitBtn>
+          </ReviewForm>
+        )}
+      </AnimatePresence>
+
+      {success && (
+        <SuccessBanner
+          as={motion.div}
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+        >
+          🎉 Thanks for your review!
+        </SuccessBanner>
+      )}
+
+      {loading ? (
+        <LoadingRow>Loading reviews…</LoadingRow>
+      ) : reviews.length === 0 ? (
+        <EmptyReviews>Be the first to leave a review!</EmptyReviews>
+      ) : (
+        <RGrid>
+          {reviews.map(r => <ReviewCard key={r.id} review={r} />)}
+        </RGrid>
+      )}
+    </ReviewsInner>
+  )
+}
+
+// ── Review styled components ───────────────────────────────────────────────────
+
+const ReviewsSection = styled.section`
+  padding: 80px 32px 96px;
+  background: #ffffff;
+`
+
+const ReviewsInner = styled.div`
+  max-width: 1100px;
+  margin: 0 auto;
+`
+
+const ReviewsTop = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+`
+
+const ReviewCount = styled.div`
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+`
+
+const WriteBtn = styled.button`
+  background: #2563eb;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  &:hover { background: #1d4ed8; transform: translateY(-1px); }
+`
+
+const ReviewForm = styled.form`
+  background: #f8faff;
+  border: 1.5px solid #e0eaff;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+`
+
+const FormRow = styled.div`display: flex; flex-direction: column; gap: 6px; position: relative;`
+
+const FormLabel = styled.label`
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  letter-spacing: 0.3px;
+`
+
+const FormInput = styled.input`
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #0f172a;
+  font-family: inherit;
+  transition: border-color 0.12s;
+  &:focus { outline: none; border-color: #2563eb; }
+`
+
+const FormTextarea = styled.textarea`
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #0f172a;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.12s;
+  &:focus { outline: none; border-color: #2563eb; }
+`
+
+const CharCount = styled.div`
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: right;
+  margin-top: 2px;
+`
+
+const FormError = styled.div`
+  font-size: 12px;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 8px 12px;
+`
+
+const SubmitBtn = styled.button`
+  align-self: flex-start;
+  background: ${p => p.disabled ? '#94a3b8' : '#2563eb'};
+  border: none;
+  border-radius: 8px;
+  padding: 11px 24px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: ${p => p.disabled ? 'not-allowed' : 'pointer'};
+  transition: background 0.12s;
+  &:hover:not(:disabled) { background: #1d4ed8; }
+`
+
+const SuccessBanner = styled.div`
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #15803d;
+  margin-bottom: 20px;
+`
+
+const LoadingRow = styled.div`
+  font-size: 14px;
+  color: #94a3b8;
+  text-align: center;
+  padding: 40px 0;
+`
+
+const EmptyReviews = styled.div`
+  font-size: 15px;
+  color: #94a3b8;
+  text-align: center;
+  padding: 48px 0;
+  font-weight: 500;
+`
+
+const RGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  @media (max-width: 900px) { grid-template-columns: repeat(2,1fr); }
+  @media (max-width: 580px) { grid-template-columns: 1fr; }
+`
+
+const RCard = styled.div`
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  &:hover { border-color: #bfdbfe; box-shadow: 0 6px 24px rgba(37,99,235,0.07); }
+`
+
+const RTop = styled.div`display: flex; align-items: center; gap: 10px;`
+
+const RAvatar = styled.div`
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+`
+
+const RMeta = styled.div`flex: 1;`
+const RName = styled.div`font-size: 13px; font-weight: 700; color: #0f172a;`
+const RDate = styled.div`font-size: 11px; color: #94a3b8; margin-top: 1px;`
+
+const Stars = styled.div`display: flex; gap: 2px;`
+const Star = styled.span`
+  font-size: 14px;
+  color: ${p => p.$filled ? '#f59e0b' : '#e2e8f0'};
+  cursor: ${p => p.$clickable ? 'pointer' : 'default'};
+  transition: color 0.1s;
+  ${p => p.$clickable && `&:hover { color: #f59e0b; }`}
+`
+
+const RText = styled.div`
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.72;
+  font-style: italic;
+`
+
+// ── Skill tree SVG ─────────────────────────────────────────────────────────────
 
 function SkillTreeSVG() {
   const nodes = [
@@ -183,6 +534,7 @@ export default function Landing() {
             <NLink href="#features">Features</NLink>
             <NLink href="#how">How It Works</NLink>
             <NLink href="#preview">The App</NLink>
+            <NLink href="#reviews">Reviews</NLink>
           </NavLinks>
           <NavEnd>
             <GhostNavBtn onClick={go}>Log In</GhostNavBtn>
@@ -325,6 +677,16 @@ export default function Landing() {
           </PreviewRight>
         </PreviewInner>
       </AltSection>
+
+      {/* ── Reviews ── */}
+      <ReviewsSection id="reviews">
+        <SecCenter>
+          <SecTag>COMMUNITY</SecTag>
+          <SecH2>What learners are saying.</SecH2>
+          <SecSub>Real reviews from people building their careers with SkillOS.</SecSub>
+        </SecCenter>
+        <ReviewsBody />
+      </ReviewsSection>
 
       {/* ── CTA Banner ── */}
       <CTASection>
