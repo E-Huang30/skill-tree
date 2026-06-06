@@ -8,15 +8,15 @@ import CreateUserModal from './CreateUserModal'
 const Shell = styled.div`
   display: flex;
   height: 100%;
-  background: #080812;
+  background: #ffffff;
   overflow: hidden;
 `
 
 const Sidebar = styled.nav`
-  width: 232px;
-  min-width: 232px;
-  background: #0b0b18;
-  border-right: 1px solid #141424;
+  width: 220px;
+  min-width: 220px;
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -24,30 +24,44 @@ const Sidebar = styled.nav`
 
 const Logo = styled.div`
   padding: 18px 18px 14px;
-  border-bottom: 1px solid #141424;
+  border-bottom: 1px solid #e2e8f0;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+`
+
+const LogoHex = styled.div`
+  font-size: 20px;
+  color: #2563eb;
+  line-height: 1;
 `
 
 const LogoTop = styled.div`
-  font-size: 11px;
-  color: #4a70b0;
-  letter-spacing: 2.5px;
-  font-weight: 700;
+  font-size: 14px;
+  color: #0f172a;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 `
 
 const LogoSub = styled.div`
   font-size: 9px;
-  color: #2a3a55;
-  letter-spacing: 3px;
-  margin-top: 2px;
+  color: #94a3b8;
+  letter-spacing: 1.5px;
+  margin-top: 1px;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 `
 
 const SectionLabel = styled.div`
   padding: 14px 18px 6px;
-  font-size: 8px;
-  color: #2a3a55;
-  letter-spacing: 3px;
+  font-size: 9px;
+  color: #94a3b8;
+  letter-spacing: 2px;
+  font-weight: 600;
   flex-shrink: 0;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  text-transform: uppercase;
 `
 
 const TreeList = styled.div`
@@ -56,64 +70,61 @@ const TreeList = styled.div`
   padding: 4px 10px;
 
   &::-webkit-scrollbar { width: 3px; }
-  &::-webkit-scrollbar-thumb { background: #141424; border-radius: 2px; }
+  &::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
 `
 
 const TreeItem = styled.div`
   padding: 9px 10px;
-  border-radius: 5px;
+  border-radius: 7px;
   cursor: pointer;
-  border: 1px solid transparent;
-  border-left: 2px solid transparent;
-  margin-bottom: 3px;
+  border-left: 3px solid transparent;
+  margin-bottom: 2px;
   transition: all 0.12s;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
   ${({ $active }) => $active ? `
-    background: #0e1628;
-    border-color: #1e3560;
-    border-left-color: #4a80d8;
+    background: #eff6ff;
+    border-left-color: #2563eb;
   ` : `
-    &:hover { background: #0e0e1e; }
+    &:hover { background: #f8fafc; }
   `}
 `
 
 const TreeName = styled.div`
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  color: ${p => p.$active ? '#8ab4f8' : '#6a7a9a'};
+  color: ${p => p.$active ? '#2563eb' : '#334155'};
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 `
 
 const TreeRole = styled.div`
-  font-size: 9px;
-  color: #2a3a55;
-  margin-top: 1px;
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-weight: 500;
 `
 
 const NewBtn = styled.button`
   margin: 10px;
-  padding: 9px;
-  background: transparent;
-  border: 1px solid #141e2e;
-  border-radius: 5px;
-  color: #3a5888;
-  font-size: 9px;
-  font-family: inherit;
+  padding: 10px;
+  background: #2563eb;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   cursor: pointer;
-  letter-spacing: 1.5px;
   flex-shrink: 0;
-  transition: all 0.12s;
+  transition: background 0.12s, transform 0.1s;
 
-  &:hover {
-    background: #0e1628;
-    border-color: #1e3560;
-    color: #5a80c0;
-  }
+  &:hover { background: #1d4ed8; transform: translateY(-1px); }
+  &:active { transform: none; }
 `
 
 const MainContent = styled.main`
@@ -167,14 +178,17 @@ export default function AppShell() {
     <Shell>
       <Sidebar>
         <Logo>
-          <LogoTop>BLUESCRIPT</LogoTop>
-          <LogoSub>SKILL OS</LogoSub>
+          <LogoHex>⬡</LogoHex>
+          <div>
+            <LogoTop>SkillOS</LogoTop>
+            <LogoSub>CAREER PATHS</LogoSub>
+          </div>
         </Logo>
         <SectionLabel>CAREER TREES</SectionLabel>
         <TreeList>
           {trees.length === 0 ? (
-            <div style={{ padding: '10px 4px', fontSize: 9, color: '#1e2a3a', letterSpacing: 1, lineHeight: 1.8 }}>
-              NO TREES YET.<br />GENERATE YOUR FIRST ONE.
+            <div style={{ padding: '12px 6px', fontSize: 11, color: '#94a3b8', lineHeight: 1.7, fontFamily: 'system-ui, sans-serif' }}>
+              No trees yet.<br />Create your first one below.
             </div>
           ) : (
             trees.map(tree => {
