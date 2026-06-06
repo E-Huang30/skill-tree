@@ -170,7 +170,12 @@ const PivotBtn = styled.button`
 
 const Body = styled.div`flex: 1; display: flex; overflow: hidden;`
 
-const FlowArea = styled.div`flex: 1; position: relative;`
+const FlowArea = styled.div`
+  flex: 1;
+  position: relative;
+  background: #ffffff;
+  .react-flow { background: #ffffff; }
+`
 
 const Legend = styled.div`
   position: absolute;
