@@ -6,6 +6,8 @@ import styled from 'styled-components'
 import { getTree, getTreeBudget } from '../api/trees'
 import SkillNode from '../components/SkillNode'
 import NodeDetailDrawer from '../components/NodeDetailDrawer'
+import CompletionCelebration from '../components/CompletionCelebration'
+import { markActiveToday } from '../utils/progress'
 
 const nodeTypes = { skillNode: SkillNode }
 
@@ -222,6 +224,8 @@ export default function TreeDetail() {
   const [budget, setBudget] = useState(null)
   const [selectedNode, setSelectedNode] = useState(null)
   const [stats, setStats] = useState({ totalHours: 0, mappedPct: 0 })
+  const [showCelebration, setShowCelebration] = useState(false)
+  const [celebrationStats, setCelebrationStats] = useState(null)
 
   useEffect(() => {
     setTree(null)
@@ -254,10 +258,24 @@ export default function TreeDetail() {
         setNodes(prev => prev.map(n => ({ ...n, data: freshMap[n.id] ?? n.data })))
         setEdges(toFlowEdges(freshTree.edges, freshTree.nodes))
         setSelectedNode(freshMap[String(updatedNode.id)] ?? updatedNode)
-        setStats(computeStats(freshTree.nodes))
+        const freshStats = computeStats(freshTree.nodes)
+        setStats(freshStats)
+
+        // Update streak
+        const userId = localStorage.getItem('userId')
+        if (userId) markActiveToday(userId)
+
+        // Celebrate if every node is now complete
+        const allDone = freshTree.nodes.every(n => n.status === 'complete')
+        if (allDone) {
+          setCelebrationStats({ totalHours: freshStats.totalHours, nodes: freshTree.nodes.length })
+          setShowCelebration(true)
+        }
         return
       } catch { /* fall through */ }
     }
+    const userId = localStorage.getItem('userId')
+    if (userId) markActiveToday(userId)
     setNodes(prev =>
       prev.map(n => n.id === String(updatedNode.id) ? { ...n, data: updatedNode } : n)
     )
@@ -271,6 +289,13 @@ export default function TreeDetail() {
 
   return (
     <Page>
+      {showCelebration && (
+        <CompletionCelebration
+          tree={tree}
+          stats={celebrationStats}
+          onClose={() => setShowCelebration(false)}
+        />
+      )}
       <StatsBar>
         <Traj>ACTIVE TRAJECTORY · <TrajRole>{tree.target_role}</TrajRole></Traj>
         <Divider />

@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import { getTrees } from '../api/trees'
 import CreateTreeModal from './CreateTreeModal'
 import CreateUserModal from './CreateUserModal'
+import { getStreak } from '../utils/progress'
 
 const Shell = styled.div`
   display: flex;
@@ -127,6 +128,22 @@ const NewBtn = styled.button`
   &:active { transform: none; }
 `
 
+const StreakBar = styled.div`
+  margin: 8px 10px 4px;
+  background: linear-gradient(135deg, #fff7ed, #fffbeb);
+  border: 1.5px solid #fed7aa;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+`
+const StreakFire = styled.div`font-size: 22px; line-height: 1;`
+const StreakInfo = styled.div``
+const StreakDays = styled.div`font-size: 13px; font-weight: 800; color: #c2410c; line-height: 1;`
+const StreakSub  = styled.div`font-size: 10px; color: #fb923c; margin-top: 2px; font-weight: 500;`
+
 const MainContent = styled.main`
   flex: 1;
   overflow: hidden;
@@ -140,6 +157,7 @@ export default function AppShell() {
   const [trees, setTrees] = useState([])
   const [showCreate, setShowCreate] = useState(false)
   const [showUserModal, setShowUserModal] = useState(false)
+  const [streak, setStreak] = useState({ days: 0, longest: 0 })
 
   const match = location.pathname.match(/\/trees\/(\d+)/)
   const activeId = match ? match[1] : null
@@ -154,7 +172,15 @@ export default function AppShell() {
       setShowUserModal(true)
     } else {
       loadTrees(userId)
+      setStreak(getStreak(userId))
     }
+
+    const onStreakUpdate = () => {
+      const uid = localStorage.getItem('userId')
+      if (uid) setStreak(getStreak(uid))
+    }
+    window.addEventListener('streak-updated', onStreakUpdate)
+    return () => window.removeEventListener('streak-updated', onStreakUpdate)
   }, [])
 
   // Reload sidebar when navigating back to dashboard (after tree creation)
@@ -184,6 +210,17 @@ export default function AppShell() {
             <LogoSub>CAREER PATHS</LogoSub>
           </div>
         </Logo>
+        {streak.days > 0 && (
+          <StreakBar>
+            <StreakFire>🔥</StreakFire>
+            <StreakInfo>
+              <StreakDays>{streak.days} day{streak.days !== 1 ? 's' : ''}</StreakDays>
+              <StreakSub>
+                {streak.days === streak.longest && streak.days > 1 ? '🏆 Personal best!' : `Best: ${streak.longest}d`}
+              </StreakSub>
+            </StreakInfo>
+          </StreakBar>
+        )}
         <SectionLabel>CAREER TREES</SectionLabel>
         <TreeList>
           {trees.length === 0 ? (
