@@ -36,6 +36,15 @@ const GlobalStyle = createGlobalStyle`
     color: var(--text);
   }
   a { color: inherit; text-decoration: none; }
+
+  /* ReactFlow controls on white background */
+  .react-flow__controls-button {
+    background: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    fill: #64748b !important;
+  }
+  .react-flow__controls-button:hover { background: #f8fafc !important; }
+  .react-flow__minimap { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
 `
 
 export default GlobalStyle

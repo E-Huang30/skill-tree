@@ -1,94 +1,178 @@
 import { Handle, Position } from '@xyflow/react'
-import styled from 'styled-components'
+import styled, { keyframes, css } from 'styled-components'
 
-const THEME = {
-  locked:      { border: '#1a2030', shadow: 'none',                           icon: '🔒', iconColor: '#2a3a55' },
-  available:   { border: '#2a5aaa', shadow: '0 0 14px rgba(42,90,170,0.45)',  icon: '◆',  iconColor: '#5a90e8' },
-  in_progress: { border: '#a06020', shadow: '0 0 14px rgba(160,96,32,0.45)', icon: '⚡', iconColor: '#d09040' },
-  complete:    { border: '#1a8050', shadow: '0 0 14px rgba(26,128,80,0.45)', icon: '✓',  iconColor: '#40c080' },
+// ── Status → visual config ────────────────────────────────────────────────────
+
+const STATUS = {
+  locked: {
+    ring: '#cbd5e1', ringW: 2, bg: '#f1f5f9',
+    iconColor: '#94a3b8', labelColor: '#94a3b8',
+    glow: 'none', pulse: false,
+  },
+  available: {
+    ring: '#2563eb', ringW: 3, bg: '#ffffff',
+    iconColor: '#2563eb', labelColor: '#1e293b',
+    glow: '0 0 0 0 rgba(37,99,235,0.5)', pulse: true,
+  },
+  in_progress: {
+    ring: '#f59e0b', ringW: 3, bg: '#fffbeb',
+    iconColor: '#b45309', labelColor: '#1e293b',
+    glow: '0 4px 20px rgba(245,158,11,0.35)', pulse: false,
+  },
+  complete: {
+    ring: '#22c55e', ringW: 3, bg: '#f0fdf4',
+    iconColor: '#16a34a', labelColor: '#1e293b',
+    glow: '0 4px 20px rgba(34,197,94,0.35)', pulse: false,
+  },
 }
 
-const Box = styled.div`
-  background: #0d0d1c;
-  border: 1px solid ${p => p.$t.border};
-  border-radius: 6px;
-  padding: 10px 13px;
-  min-width: 175px;
-  max-width: 210px;
-  box-shadow: ${p => p.$t.shadow};
-  font-family: 'Courier New', Courier, monospace;
+// ── Icon picker ────────────────────────────────────────────────────────────────
+
+function pickIcon(title = '') {
+  const t = title.toLowerCase()
+  if (/html|markup|tag/.test(t))               return '‹›'
+  if (/css|style|layout|flex|grid/.test(t))    return '✦'
+  if (/typescript|tsx/.test(t))                return 'TS'
+  if (/javascript|jsx|\.js/.test(t))           return 'JS'
+  if (/python/.test(t))                        return 'Py'
+  if (/react|vue|angular|svelte/.test(t))      return '⚛'
+  if (/node|express|deno/.test(t))             return '{}'
+  if (/database|sql|mongo|postgres|mysql/.test(t)) return '⊞'
+  if (/git|github|version|branch/.test(t))     return '⑂'
+  if (/api|rest|http|graphql|fetch/.test(t))   return '⇌'
+  if (/data.*sci|analytic|tableau|power.?bi/.test(t)) return '∑'
+  if (/machine|deep learn|neural|ml|ai/.test(t)) return '◉'
+  if (/devops|docker|k8s|cloud|deploy/.test(t)) return '⬡'
+  if (/test|jest|cypress|qa|debug/.test(t))    return '◎'
+  if (/security|auth|oauth|jwt/.test(t))       return '⊕'
+  if (/math|calculus|linear|statistic/.test(t)) return 'π'
+  if (/algorithm|data.struct/.test(t))         return 'Σ'
+  if (/ui|ux|figma|design|proto/.test(t))      return '◈'
+  if (/excel|sheet|spread/.test(t))            return '▦'
+  if (/java\b|kotlin/.test(t))                 return 'Ja'
+  if (/go\b|golang/.test(t))                   return 'Go'
+  if (/rust/.test(t))                          return 'Rs'
+  if (/swift|ios/.test(t))                     return 'Sw'
+  if (/c\+\+|cpp/.test(t))                     return 'C+'
+  if (/php/.test(t))                           return 'φ'
+  if (/linux|bash|shell|terminal/.test(t))     return '$_'
+  if (/network|tcp|http/.test(t))              return '⊗'
+  return title.slice(0, 2).toUpperCase()
+}
+
+// ── Animations ─────────────────────────────────────────────────────────────────
+
+const ringPulse = keyframes`
+  0%   { box-shadow: 0 0 0 0 rgba(37,99,235,0.55); }
+  70%  { box-shadow: 0 0 0 12px rgba(37,99,235,0); }
+  100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+`
+
+// ── Styled components ──────────────────────────────────────────────────────────
+
+const Wrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 80px;
+`
+
+const Circle = styled.div`
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: ${p => p.$s.bg};
+  border: ${p => p.$s.ringW}px solid ${p => p.$s.ring};
+  box-shadow: ${p => p.$s.glow};
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: box-shadow 0.15s, border-color 0.15s;
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  ${p => p.$s.pulse && css`
+    animation: ${ringPulse} 2s ease-in-out infinite;
+  `}
 
   &:hover {
-    border-color: ${p => p.$status === 'locked' ? '#232a3a' : p.$t.border};
-    box-shadow: ${p => p.$status === 'locked'
-      ? '0 0 8px rgba(30,42,60,0.3)'
-      : p.$t.shadow.replace('0.45', '0.7')};
+    transform: scale(1.1);
+    filter: brightness(1.05);
   }
 `
 
-const Row = styled.div`display: flex; align-items: center; gap: 7px; margin-bottom: 5px;`
-
-const Icon = styled.span`
-  font-size: 10px;
-  flex-shrink: 0;
+const IconText = styled.span`
+  font-size: ${p => p.$short ? '15px' : '11px'};
+  font-weight: 800;
   color: ${p => p.$color};
+  font-family: 'Courier New', Courier, monospace;
+  line-height: 1;
+  user-select: none;
+  letter-spacing: ${p => p.$short ? '0px' : '-0.5px'};
 `
 
-const Title = styled.div`
-  font-size: 11px;
-  font-weight: 700;
-  color: ${p => p.$status === 'locked' ? '#2a3a55' : '#b0c4e0'};
-  line-height: 1.25;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+const GreenTick = styled.div`
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: #fff;
+  font-weight: 900;
+  box-shadow: 0 2px 6px rgba(34,197,94,0.4);
 `
 
-const Meta = styled.div`display: flex; align-items: center; gap: 5px;`
-
-const Hours = styled.span`font-size: 9px; color: #2a3a55; letter-spacing: 0.5px;`
-
-const Badge = styled.span`
-  border-radius: 3px;
-  padding: 1px 5px;
-  font-size: 8px;
-  letter-spacing: 1px;
-
-  ${p => p.$kind === 'MASTERED' && `
-    background: #0a1e12; border: 1px solid #1a5030; color: #40c080;
-  `}
-  ${p => p.$kind === 'ACTIVE' && `
-    background: #1e1008; border: 1px solid #50280a; color: #d09040;
-  `}
-  ${p => p.$kind === 'FORK' && `
-    background: #0a1228; border: 1px solid #1a3060; color: #4a80d8;
-  `}
+const Label = styled.div`
+  font-size: 10px;
+  font-weight: 600;
+  color: ${p => p.$color};
+  text-align: center;
+  line-height: 1.3;
+  max-width: 88px;
+  word-break: break-word;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 `
 
-const handleStyle = { background: '#1e2a3a', border: 'none', width: 5, height: 5 }
+const handleStyle = {
+  background: 'transparent',
+  border: 'none',
+  width: 6,
+  height: 6,
+  zIndex: 10,
+}
+
+// ── Component ──────────────────────────────────────────────────────────────────
 
 export default function SkillNode({ data }) {
-  const t = THEME[data.status] || THEME.locked
-  const statusBadge = data.status === 'complete' ? 'MASTERED'
-    : data.status === 'in_progress' ? 'ACTIVE'
-    : null
+  const s = STATUS[data.status] || STATUS.locked
+  const isComplete = data.status === 'complete'
+  const isLocked   = data.status === 'locked'
+
+  const icon = isComplete ? '✓'
+    : isLocked ? '⊘'
+    : pickIcon(data.title)
+
+  const shortIcon = String(icon).length <= 2
 
   return (
     <>
       <Handle type="target" position={Position.Top} style={handleStyle} />
-      <Box $t={t} $status={data.status}>
-        <Row>
-          <Icon $color={t.iconColor}>{t.icon}</Icon>
-          <Title $status={data.status}>{data.title}</Title>
-        </Row>
-        <Meta>
-          <Hours>{data.estimated_hours || 0}H</Hours>
-          {statusBadge && <Badge $kind={statusBadge}>{statusBadge}</Badge>}
-          {data.branch_label && <Badge $kind="FORK">FORK</Badge>}
-        </Meta>
-      </Box>
+      <Wrap>
+        <Circle $s={s}>
+          <IconText $color={s.iconColor} $short={shortIcon}>
+            {icon}
+          </IconText>
+          {isComplete && <GreenTick>✓</GreenTick>}
+        </Circle>
+        <Label $color={s.labelColor}>{data.title}</Label>
+      </Wrap>
       <Handle type="source" position={Position.Bottom} style={handleStyle} />
     </>
   )

@@ -51,7 +51,7 @@ function autoLayout(flowNodes, flowEdges) {
     byLevel[l].push(n.id)
   })
 
-  const W = 210, H = 80, HG = 80, VG = 120
+  const W = 80, H = 100, HG = 70, VG = 90
   const positions = {}
   Object.entries(byLevel).forEach(([l, ids]) => {
     const total = ids.length * W + (ids.length - 1) * HG
@@ -75,15 +75,26 @@ function toFlowNodes(nodes) {
   }))
 }
 
-function toFlowEdges(edges) {
-  return edges.map(e => ({
-    id: String(e.id),
-    source: String(e.parent_node_id),
-    target: String(e.child_node_id),
-    type: 'smoothstep',
-    animated: e.edge_type === 'optional',
-    style: { stroke: '#1e2a3a', strokeWidth: 1.5 }
-  }))
+function toFlowEdges(edges, nodes) {
+  const statusMap = {}
+  nodes.forEach(n => { statusMap[n.id] = n.status })
+
+  return edges.map(e => {
+    const ts = statusMap[e.child_node_id] || 'locked'
+    const color = ts === 'complete'    ? '#22c55e'
+      : ts === 'in_progress'           ? '#f59e0b'
+      : ts === 'available'             ? '#2563eb'
+      : '#cbd5e1'
+    const w = ts === 'locked' ? 1.5 : 2
+    return {
+      id: String(e.id),
+      source: String(e.parent_node_id),
+      target: String(e.child_node_id),
+      type: 'smoothstep',
+      animated: ts === 'in_progress',
+      style: { stroke: color, strokeWidth: w }
+    }
+  })
 }
 
 function computeStats(nodes) {
@@ -99,15 +110,15 @@ const Page = styled.div`
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #080812;
+  background: #ffffff;
   overflow: hidden;
 `
 
 const StatsBar = styled.div`
-  height: 46px;
-  min-height: 46px;
-  background: #0b0b18;
-  border-bottom: 1px solid #141424;
+  height: 48px;
+  min-height: 48px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
   padding: 0 16px;
@@ -117,16 +128,17 @@ const StatsBar = styled.div`
 `
 
 const Traj = styled.div`
-  font-size: 10px;
-  color: #2a4070;
-  letter-spacing: 1px;
+  font-size: 11px;
+  color: #64748b;
+  letter-spacing: 0.3px;
   white-space: nowrap;
   flex-shrink: 0;
+  font-weight: 500;
 `
 
-const TrajRole = styled.span`color: #5a90e8; font-weight: 700;`
+const TrajRole = styled.span`color: #2563eb; font-weight: 700;`
 
-const Divider = styled.div`width: 1px; height: 18px; background: #141424; flex-shrink: 0;`
+const Divider = styled.div`width: 1px; height: 18px; background: #e2e8f0; flex-shrink: 0;`
 
 const Stat = styled.div`
   display: flex;
@@ -135,25 +147,25 @@ const Stat = styled.div`
   flex-shrink: 0;
 `
 
-const SVal = styled.div`font-size: 12px; font-weight: 700; color: #5a90e8; line-height: 1;`
-const SLbl = styled.div`font-size: 7px; color: #2a3a55; letter-spacing: 1.5px; margin-top: 2px;`
+const SVal = styled.div`font-size: 13px; font-weight: 800; color: #2563eb; line-height: 1;`
+const SLbl = styled.div`font-size: 8px; color: #94a3b8; letter-spacing: 1px; margin-top: 2px; text-transform: uppercase;`
 
 const Spacer = styled.div`flex: 1;`
 
 const PivotBtn = styled.button`
-  background: transparent;
-  border: 1px solid #141e30;
-  border-radius: 4px;
-  color: #2a4070;
+  background: #f8faff;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 6px;
+  color: #2563eb;
   font-family: inherit;
-  font-size: 9px;
-  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 14px;
   cursor: pointer;
-  letter-spacing: 1px;
   white-space: nowrap;
   flex-shrink: 0;
   transition: all 0.12s;
-  &:hover { background: #0e1628; border-color: #1e3560; color: #5a80c0; }
+  &:hover { background: #eff6ff; border-color: #93c5fd; }
 `
 
 const Body = styled.div`flex: 1; display: flex; overflow: hidden;`
@@ -162,22 +174,26 @@ const FlowArea = styled.div`flex: 1; position: relative;`
 
 const Legend = styled.div`
   position: absolute;
-  bottom: 10px;
-  left: 10px;
+  bottom: 12px;
+  left: 12px;
   display: flex;
-  gap: 5px;
+  gap: 8px;
   z-index: 5;
   pointer-events: none;
 `
 
 const LegendChip = styled.div`
-  background: rgba(8,8,18,0.88);
-  border: 1px solid #141424;
-  border-radius: 3px;
-  padding: 3px 7px;
-  font-size: 8px;
-  color: #2a3a55;
-  letter-spacing: 0.8px;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
 `
 
 const Loading = styled.div`
@@ -185,10 +201,10 @@ const Loading = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
-  color: #2a3a55;
-  letter-spacing: 2px;
-  background: #080812;
+  font-size: 13px;
+  color: #94a3b8;
+  letter-spacing: 1px;
+  background: #ffffff;
 `
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -208,7 +224,7 @@ export default function TreeDetail() {
     getTree(id)
       .then(data => {
         setTree(data)
-        const fe = toFlowEdges(data.edges)
+        const fe = toFlowEdges(data.edges, data.nodes)
         const fn = autoLayout(toFlowNodes(data.nodes), fe)
         setNodes(fn)
         setEdges(fe)
@@ -231,6 +247,7 @@ export default function TreeDetail() {
         freshTree.nodes.forEach(n => { freshMap[String(n.id)] = n })
         // Keep positions, update data for every node
         setNodes(prev => prev.map(n => ({ ...n, data: freshMap[n.id] ?? n.data })))
+        setEdges(toFlowEdges(freshTree.edges, freshTree.nodes))
         setSelectedNode(freshMap[String(updatedNode.id)] ?? updatedNode)
         setStats(computeStats(freshTree.nodes))
         return
@@ -287,22 +304,23 @@ export default function TreeDetail() {
             nodeTypes={nodeTypes}
             onNodeClick={handleNodeClick}
             fitView
-            fitViewOptions={{ padding: 0.25 }}
+            fitViewOptions={{ padding: 0.3 }}
             proOptions={{ hideAttribution: true }}
           >
-            <Background color="#141424" gap={22} size={1} />
+            <Background color="#e2e8f0" gap={24} size={1} />
             <Controls
               style={{
-                background: '#0b0b18',
-                border: '1px solid #141424',
-                borderRadius: 5,
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: 8,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
               }}
             />
           </ReactFlow>
           <Legend>
-            <LegendChip>CLICK LIT NODE TO UNLOCK</LegendChip>
-            <LegendChip>◇ = COSTS SP</LegendChip>
-            <LegendChip>⚡ GOLD = FREE</LegendChip>
+            <LegendChip><span style={{color:'#2563eb'}}>●</span> Click a blue node to begin</LegendChip>
+            <LegendChip><span style={{color:'#22c55e'}}>●</span> Green = complete</LegendChip>
+            <LegendChip><span style={{color:'#cbd5e1'}}>●</span> Gray = locked</LegendChip>
           </Legend>
         </FlowArea>
 
